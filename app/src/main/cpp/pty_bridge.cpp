@@ -17,12 +17,31 @@ Java_com_termdroid64_app_NativePty_createSubprocess(
         jclass /* clazz */,
         jstring cmd,
         jstring cwd,
+        jobjectArray argsArray,
         jobjectArray envArray,
         jint rows,
         jint cols) {
 
     const char* cmdStr = env->GetStringUTFChars(cmd, nullptr);
     const char* cwdStr = env->GetStringUTFChars(cwd, nullptr);
+
+    std::vector<std::string> argStrings;
+    std::vector<char*> argPtrs;
+    argStrings.emplace_back(cmdStr);
+    if (argsArray != nullptr) {
+        jsize argCount = env->GetArrayLength(argsArray);
+        for (jsize i = 0; i < argCount; ++i) {
+            auto jStr = (jstring) env->GetObjectArrayElement(argsArray, i);
+            const char* cStr = env->GetStringUTFChars(jStr, nullptr);
+            argStrings.emplace_back(cStr);
+            env->ReleaseStringUTFChars(jStr, cStr);
+            env->DeleteLocalRef(jStr);
+        }
+    }
+    for (auto& s : argStrings) {
+        argPtrs.push_back(const_cast<char*>(s.c_str()));
+    }
+    argPtrs.push_back(nullptr);
 
     std::vector<std::string> envStrings;
     std::vector<char*> envPtrs;
@@ -78,8 +97,7 @@ Java_com_termdroid64_app_NativePty_createSubprocess(
             chdir(cwdStr);
         }
 
-        char* argv[] = { const_cast<char*>(cmdStr), nullptr };
-        execve(cmdStr, argv, envPtrs.data());
+        execve(cmdStr, argPtrs.data(), envPtrs.data());
         _exit(127);
     }
 

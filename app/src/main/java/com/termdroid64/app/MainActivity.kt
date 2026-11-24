@@ -1,8 +1,10 @@
 package com.termdroid64.app
 
+import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
@@ -14,6 +16,8 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 
 class MainActivity : AppCompatActivity() {
 
@@ -40,23 +44,38 @@ class MainActivity : AppCompatActivity() {
         ctrlToggle = findViewById(R.id.keyCtrl)
 
         phoneCapabilities = PhoneCapabilities(this)
-        statusBadge.text = "aarch64 • ${Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a"}"
+        statusBadge.text = "aarch64 • Alpine"
 
-        appendOutput(
-            "TermDroid64 [aarch64 / arm64-v8a]\n" +
-            "Type 'help' for built-in phone commands, or any Android shell command.\n\n"
-        )
+        appendOutput("TermDroid64 v2.0 [aarch64 Linux + Phone API]\n")
 
         setupToolbar()
         setupInput()
         setupExtraKeys()
-        startNewSession()
+        requestStorageIfNeeded()
+
+        Thread {
+            AlpineBootstrap.installIfNeeded(this) { msg ->
+                runOnUiThread { appendOutput(msg) }
+            }
+            runOnUiThread { startNewSession() }
+        }.start()
+    }
+
+    private fun requestStorageIfNeeded() {
+        val perms = arrayOf(
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
+        val missing = perms.any {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+        if (missing) {
+            ActivityCompat.requestPermissions(this, perms, 101)
+        }
     }
 
     private fun setupToolbar() {
-        findViewById<ImageButton>(R.id.btnClear).setOnClickListener {
-            terminalOutput.text = ""
-        }
+        findViewById<ImageButton>(R.id.btnClear).setOnClickListener { terminalOutput.text = "" }
         findViewById<ImageButton>(R.id.btnCopyAll).setOnClickListener {
             val cb = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             cb.setPrimaryClip(ClipData.newPlainText("TermDroid64 Output", terminalOutput.text))
@@ -65,24 +84,20 @@ class MainActivity : AppCompatActivity() {
         findViewById<ImageButton>(R.id.btnRestart).setOnClickListener {
             session?.stop()
             terminalOutput.text = ""
-            appendOutput("Restarting aarch64 shell session...\n\n")
+            appendOutput("Restarting aarch64 Linux shell...\n\n")
             startNewSession()
         }
     }
 
     private fun setupInput() {
-        findViewById<Button>(R.id.btnSend).setOnClickListener {
-            submitCommand()
-        }
+        findViewById<Button>(R.id.btnSend).setOnClickListener { submitCommand() }
         commandInput.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_SEND ||
                 (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)
             ) {
                 submitCommand()
                 true
-            } else {
-                false
-            }
+            } else false
         }
     }
 
@@ -96,12 +111,8 @@ class MainActivity : AppCompatActivity() {
             session?.sendCtrlKey('C')
             appendOutput("^C\n")
         }
-        findViewById<Button>(R.id.keyTab).setOnClickListener {
-            session?.write("\t")
-        }
-        findViewById<Button>(R.id.keyEsc).setOnClickListener {
-            session?.write("\u001B")
-        }
+        findViewById<Button>(R.id.keyTab).setOnClickListener { session?.write("\t") }
+        findViewById<Button>(R.id.keyEsc).setOnClickListener { session?.write("\u001B") }
         findViewById<Button>(R.id.keyUp).setOnClickListener {
             if (history.isNotEmpty()) {
                 historyIndex = (historyIndex - 1).coerceAtLeast(0)
@@ -153,6 +164,11 @@ class MainActivity : AppCompatActivity() {
             terminalOutput.text = ""
             return
         }
+        if (raw.trim() == "phone-setup-storage") {
+            requestStorageIfNeeded()
+            appendOutput("Storage permission requested. Your phone storage is mounted at /sdcard\n")
+            return
+        }
 
         val phoneResult = phoneCapabilities.tryHandleCommand(raw)
         if (phoneResult != null) {
@@ -166,26 +182,18 @@ class MainActivity : AppCompatActivity() {
     private fun startNewSession() {
         val newSession = TerminalSession(
             context = this,
-            onOutput = { text ->
-                runOnUiThread { appendOutput(text) }
-            },
-            onExit = { code ->
-                runOnUiThread {
-                    appendOutput("\n[Process exited with code $code]\n")
-                }
-            }
+            onOutput = { text -> runOnUiThread { appendOutput(text) } },
+            onExit = { code -> runOnUiThread { appendOutput("\n[Process exited with code $code]\n") } }
         )
         session = newSession
         if (!newSession.start()) {
-            appendOutput("Failed to start /system/bin/sh PTY.\n")
+            appendOutput("Failed to start shell PTY.\n")
         }
     }
 
     private fun appendOutput(text: String) {
         terminalOutput.append(text)
-        scrollView.post {
-            scrollView.fullScroll(ScrollView.FOCUS_DOWN)
-        }
+        scrollView.post { scrollView.fullScroll(ScrollView.FOCUS_DOWN) }
     }
 
     override fun onDestroy() {

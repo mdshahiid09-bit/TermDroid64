@@ -21,7 +21,8 @@
             android:fontFamily="monospace"
             android:text="TermDroid64"
             android:textColor="#58A6FF"
-            android:textSize="16sp"
+            android:textSize="14sp"
+            android:maxLines="1"
             android:textStyle="bold" />
 
         <TextView

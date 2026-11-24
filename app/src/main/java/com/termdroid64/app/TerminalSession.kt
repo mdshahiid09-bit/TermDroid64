@@ -2,6 +2,7 @@ package com.termdroid64.app
 
 import android.content.Context
 import android.os.ParcelFileDescriptor
+import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.nio.charset.StandardCharsets
@@ -22,17 +23,50 @@ class TerminalSession(
     fun start(rows: Int = 30, cols: Int = 80): Boolean {
         if (running.get()) return true
 
-        val homeDir = context.filesDir.absolutePath
-        val env = arrayOf(
-            "TERM=xterm-256color",
-            "HOME=$homeDir",
-            "TMPDIR=${context.cacheDir.absolutePath}",
-            "PATH=/system/bin:/system/xbin:/vendor/bin",
-            "LANG=en_US.UTF-8"
-        )
+        val prootBin = File(context.applicationInfo.nativeLibraryDir, "libproot.so")
+        val rootfs = AlpineBootstrap.rootfsDir(context)
+        val useProot = prootBin.exists() && AlpineBootstrap.isInstalled(context)
 
-        val res = NativePty.createSubprocess("/system/bin/sh", homeDir, env, rows, cols)
-            ?: return false
+        val cmd: String
+        val args: Array<String>
+        val cwd: String
+        val env: Array<String>
+
+        if (useProot) {
+            cmd = prootBin.absolutePath
+            args = arrayOf(
+                "-0",
+                "-r", rootfs.absolutePath,
+                "-b", "/dev",
+                "-b", "/proc",
+                "-b", "/sys",
+                "-b", "/storage/emulated/0:/sdcard",
+                "-w", "/root",
+                "/bin/sh", "-l"
+            )
+            cwd = context.filesDir.absolutePath
+            env = arrayOf(
+                "TERM=xterm-256color",
+                "HOME=/root",
+                "PROOT_TMP_DIR=${context.cacheDir.absolutePath}",
+                "PROOT_NO_SECCOMP=1",
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "LANG=en_US.UTF-8"
+            )
+        } else {
+            cmd = "/system/bin/sh"
+            args = emptyArray()
+            cwd = context.filesDir.absolutePath
+            env = arrayOf(
+                "TERM=xterm-256color",
+                "HOME=${context.filesDir.absolutePath}",
+                "TMPDIR=${context.cacheDir.absolutePath}",
+                "PATH=/system/bin:/system/xbin:/vendor/bin",
+                "LANG=en_US.UTF-8"
+            )
+        }
+
+        val res = NativePty.createSubprocess(cmd, cwd, args, env, rows, cols) ?: return false
 
         pid = res[0]
         masterFd = res[1]
@@ -79,12 +113,6 @@ class TerminalSession(
         val code = ch.uppercaseChar().code - 64
         if (code in 1..26) {
             write(code.toChar().toString())
-        }
-    }
-
-    fun resize(rows: Int, cols: Int) {
-        if (masterFd >= 0 && rows > 0 && cols > 0) {
-            NativePty.setPtyWindowSize(masterFd, rows, cols)
         }
     }
 

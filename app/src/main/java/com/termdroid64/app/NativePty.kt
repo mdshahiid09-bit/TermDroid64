@@ -9,6 +9,7 @@ object NativePty {
     external fun createSubprocess(
         cmd: String,
         cwd: String,
+        argsArray: Array<String>,
         envArray: Array<String>,
         rows: Int,
         cols: Int
