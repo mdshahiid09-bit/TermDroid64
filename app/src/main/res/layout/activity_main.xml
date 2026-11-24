@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0D1117"
+    android:orientation="vertical">
+
+    <!-- Top Header Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="#161B22"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="12dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="monospace"
+            android:text="TermDroid64"
+            android:textColor="#58A6FF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/statusBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:background="#21262D"
+            android:fontFamily="monospace"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="3dp"
+            android:text="aarch64"
+            android:textColor="#3FB950"
+            android:textSize="11sp" />
+
+        <ImageButton
+            android:id="@+id/btnCopyAll"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Copy output"
+            android:src="@android:drawable/ic_menu_edit"
+            android:tint="#8B949E" />
+
+        <ImageButton
+            android:id="@+id/btnClear"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Clear screen"
+            android:src="@android:drawable/ic_menu_delete"
+            android:tint="#8B949E" />
+
+        <ImageButton
+            android:id="@+id/btnRestart"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Restart shell"
+            android:src="@android:drawable/ic_menu_rotate"
+            android:tint="#8B949E" />
+    </LinearLayout>
+
+    <!-- Scrollable Terminal Output -->
+    <ScrollView
+        android:id="@+id/terminalScroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/terminalOutput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:lineSpacingMultiplier="1.15"
+            android:textColor="#E6EDF3"
+            android:textIsSelectable="true"
+            android:textSize="13sp" />
+    </ScrollView>
+
+    <!-- Termux-Style Extra Keys Row -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="#161B22"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="6dp">
+
+            <Button
+                android:id="@+id/keyEsc"
+                style="@style/ExtraKeyButton"
+                android:text="ESC" />
+
+            <Button
+                android:id="@+id/keyTab"
+                style="@style/ExtraKeyButton"
+                android:text="TAB" />
+
+            <Button
+                android:id="@+id/keyCtrl"
+                style="@style/ExtraKeyButton"
+                android:alpha="0.6"
+                android:text="CTRL" />
+
+            <Button
+                android:id="@+id/keyCtrlC"
+                style="@style/ExtraKeyButton"
+                android:text="^C" />
+
+            <Button
+                android:id="@+id/keyUp"
+                style="@style/ExtraKeyButton"
+                android:text="↑" />
+
+            <Button
+                android:id="@+id/keyDown"
+                style="@style/ExtraKeyButton"
+                android:text="↓" />
+
+            <Button
+                android:id="@+id/keySlash"
+                style="@style/ExtraKeyButton"
+                android:text="/" />
+
+            <Button
+                android:id="@+id/keyDash"
+                style="@style/ExtraKeyButton"
+                android:text="-" />
+
+            <Button
+                android:id="@+id/keyPipe"
+                style="@style/ExtraKeyButton"
+                android:text="|" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- Command Input Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#161B22"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:paddingEnd="6dp"
+            android:text="$"
+            android:textColor="#3FB950"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/commandInput"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@null"
+            android:fontFamily="monospace"
+            android:hint="Enter command (e.g. help, phone-info, ls)"
+            android:imeOptions="actionSend"
+            android:inputType="textNoSuggestions|textVisiblePassword"
+            android:maxLines="1"
+            android:textColor="#E6EDF3"
+            android:textColorHint="#6E7681"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/btnSend"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:backgroundTint="#238636"
+            android:fontFamily="monospace"
+            android:text="RUN"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+</LinearLayout>
