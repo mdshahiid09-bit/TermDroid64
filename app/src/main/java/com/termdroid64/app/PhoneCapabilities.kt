@@ -172,11 +172,9 @@ class PhoneCapabilities(private val context: Context) {
                     v.vibrate(ms)
                 }
             }
-            "Vibrated for ${ms}ms.
-"
+            "Vibrated for ${ms}ms.\n"
         } catch (e: Exception) {
-            "Vibrate failed: ${e.message}
-"
+            "Vibrate failed: ${e.message}\n"
         }
     }
 
@@ -185,46 +183,38 @@ class PhoneCapabilities(private val context: Context) {
         android.os.Handler(context.mainLooper).post {
             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
         }
-        return "Toast shown: $msg
-"
+        return "Toast shown: $msg\n"
     }
 
     private fun toggleTorch(arg: String): String {
         val enable = when (arg.trim().lowercase(Locale.US)) {
             "on", "1", "true" -> true
             "off", "0", "false" -> false
-            else -> return "Usage: phone-torch on|off
-"
+            else -> return "Usage: phone-torch on|off\n"
         }
         return try {
             val cm = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
             val cameraId = cm.cameraIdList.firstOrNull { id ->
                 cm.getCameraCharacteristics(id)
                     .get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
-            } ?: return "No flash hardware found on this device.
-"
+            } ?: return "No flash hardware found on this device.\n"
             cm.setTorchMode(cameraId, enable)
-            "Flashlight turned ${if (enable) "ON" else "OFF"}.
-"
+            "Flashlight turned ${if (enable) "ON" else "OFF"}.\n"
         } catch (e: Exception) {
-            "Torch error: ${e.message}
-"
+            "Torch error: ${e.message}\n"
         }
     }
 
     private fun copyClipboard(arg: String): String {
-        if (arg.isEmpty()) return "Usage: phone-copy <text>
-"
-        var result = "Copied to clipboard.
-"
+        if (arg.isEmpty()) return "Usage: phone-copy <text>\n"
+        var result = "Copied to clipboard.\n"
         val latch = java.util.concurrent.CountDownLatch(1)
         android.os.Handler(context.mainLooper).post {
             try {
                 val cb = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 cb.setPrimaryClip(ClipData.newPlainText("TermDroid64", arg))
             } catch (e: Exception) {
-                result = "Clipboard error: ${e.message}
-"
+                result = "Clipboard error: ${e.message}\n"
             } finally {
                 latch.countDown()
             }
@@ -250,7 +240,6 @@ class PhoneCapabilities(private val context: Context) {
             }
         }
         latch.await()
-        return "$text
-"
+        return "$text\n"
     }
 }

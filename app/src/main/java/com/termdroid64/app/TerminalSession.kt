@@ -104,8 +104,8 @@ class TerminalSession(
 
     private fun stripAnsi(input: String): String {
         return input
-            .replace(Regex("\u001B\[[0-9;?]*[ -/]*[@-~]"), "")
-            .replace(Regex("\u001B\][^\u0007]*\u0007"), "")
+            .replace(Regex("\u001B\\[[0-9;?]*[ -/]*[@-~]"), "")
+            .replace(Regex("\u001B\\][^\u0007]*\u0007"), "")
             .replace("\r\n", "\n")
             .replace("\r", "")
     }
